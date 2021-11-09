@@ -1,19 +1,30 @@
-SOUS_REPERTOIRES = src
+INC  = `pkg-config --cflags sdl2`
+LIBS = `pkg-config --libs sdl2 SDL2_gfx`
 
-all : sous_repertoires
-.PHONY : all doc sous_repertoires $(SOUS_REPERTOIRES) clean
+CXX	 = g++
+CXXFLAGS = -c -Wall -std=c++11 -ggdb $(INC) -I .
+#-DDEBUG
 
-doc :
-	rm -fr doc
-	doxygen .doxyfile 1>| .doxy.sor 2>&1
+sources = $(wildcard *.cpp *.cc)
+objects = $(patsubst %.cc, ../bin/%.o,$(patsubst %.cpp,../bin/%.o, $(sources)))
+targets = ../bin/fourmis
 
-sous_repertoires : $(SOUS_REPERTOIRES)
+all : $(targets)
 
-$(SOUS_REPERTOIRES):
-	$(MAKE) -k -C $@ all
+../bin/%.o : %.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+# ../bin/%.o : %.cc
+# 	$(CXX) $(CXXFLAGS) $< -o $@
+
+../bin/%.o : %.cpp ../include/%.h
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+../bin/%.o : %.cc ../include/%.h
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+$(targets) : $(objects)
+	$(CXX) $(LDFLAGS) $^ $(LIBS) -o $@
 
 clean :
-	for rep in $(SOUS_REPERTOIRES); do \
-	  $(MAKE) -k -C $$rep clean; \
-	done
-
+	-@rm -f *~ ../bin/*.o $(targets)
